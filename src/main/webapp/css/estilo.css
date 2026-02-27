@@ -8,5 +8,5 @@ body {
             max-width: 450px; /* Ancho máximo de la tarjeta */
             width: 100%;
             border: none; /* Quitamos el borde por defecto para usar solo sombra */
-           background-color: #c8e3fe;
+            background-color: #c8e3fe;
         }
