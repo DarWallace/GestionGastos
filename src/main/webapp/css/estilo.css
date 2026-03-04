@@ -1,12 +1,15 @@
 body {
-            background-color: #c0c4c8; /* Un color de fondo gris suave */
-            min-height: 100vh; /* Altura mínima de toda la pantalla */
-            display: flex;
-            align-items: center; /* Centrado vertical */
-        }
-        .login-card {
-            max-width: 450px; /* Ancho máximo de la tarjeta */
-            width: 100%;
-            border: none; /* Quitamos el borde por defecto para usar solo sombra */
-            background-color: #c8e3fe;
-        }
+	background-image: url("../img/fondoLogin.png");
+	
+	background-attachment: fixed;
+	background-size: cover;
+	background-position: center;
+	background-repeat: no-repeat;
+}
+
+.login-card {
+	max-width: 450px; /* Ancho máximo de la tarjeta */
+	width: 100%;
+	border: none; /* Quitamos el borde por defecto para usar solo sombra */
+	background-color: #c8e3fe;
+}

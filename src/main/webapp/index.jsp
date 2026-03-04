@@ -1,4 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -67,10 +68,18 @@
     <script type="text/javascript">
         // Configuramos la posición de las alertas (opcional, pero queda bien)
         alertify.set('notifier','position', 'top-right');
-        
-        // Esto lanzará la notificación ahora que Alertify ya está cargado
-        alertify.success("¡Sistema listo! Pantalla de login cargada.");
+                
     </script>
-
+<%-- Código para capturar el error del Servlet --%>
+<%
+    String error = (String) request.getAttribute("errorLogin");
+    if(error != null) {
+%>
+    <script type="text/javascript">
+        alertify.error("<%= error %>");
+    </script>
+<%
+    }
+%>
 </body>
 </html>
