@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="./css/estilo.css" />
 
 </head>
-<body>
+<body class="body1">
 
     <div class="container d-flex justify-content-center">
         

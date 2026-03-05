@@ -3,33 +3,28 @@
 <%
     // 1. Verificación de seguridad: Sesión
     HttpSession sesion = request.getSession();
-    String usuario = (String) sesion.getAttribute("usuario");
-    if (usuario == null) {
+Integer idUsuario = (Integer) sesion.getAttribute("idUsuario");
+String usuario=(String) sesion.getAttribute("usuario");
+    if (idUsuario == null) {
         response.sendRedirect("index.jsp");
         return;
     }
 
     // 2. Inicialización de datos
     Modelo modelo = new Modelo();
-    LocalDate hoy = LocalDate.now();
     
-    // Lista de compras del mes actual y total
-    List<Compra> comprasMes = modelo.obtenerComprasMes(hoy.getMonthValue(), hoy.getYear());
-    double totalMes = modelo.calcularTotalMes(hoy.getMonthValue(), hoy.getYear());
+    List<Compra> listaCompras = modelo.obtenerTodasCompras(idUsuario);
+    double totalAcumulado = modelo.calcularTotalHistorico(idUsuario);
 
-    // 3. Lógica para el rango de fechas (De primera compra a última)
+    // 3. Lógica para el rango de fechas (Mantenemos esto porque es útil)
     String[] rango = modelo.obtenerRangoFechas();
     String textoRango = "Sin registros";
     
     if (rango[0] != null && rango[1] != null) {
-        // Formateador para "Mes Año" en español
         DateTimeFormatter formatoSalida = DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("es", "ES"));
-        
         LocalDate fechaInicio = LocalDate.parse(rango[0]);
         LocalDate fechaFin = LocalDate.parse(rango[1]);
-        
         textoRango = fechaInicio.format(formatoSalida) + " a " + fechaFin.format(formatoSalida);
-        // Poner la primera letra en mayúscula
         textoRango = textoRango.substring(0, 1).toUpperCase() + textoRango.substring(1);
     }
 %>
@@ -43,31 +38,27 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="./css/alertify.min.css" />
     <link rel="stylesheet" href="./css/themes/default.min.css" />
+    <link rel="stylesheet" href="./css/estilo.css" />
     <style>
-        body { background-color: #f8f9fa; }
-        .navbar-brand { font-weight: bold; color: #198754 !important; }
-        .card-total { border-left: 5px solid #198754; }
-        .badge-tienda { background-color: #e9ecef; color: #495057; border: 1px solid #dee2e6; }
+        /* Pequeño ajuste por si no tienes badge-tienda en estilo.css */
+        .badge-tienda { background-color: #f0f2f5; color: #333; border: 1px solid #ddd; }
     </style>
 </head>
-<body>
+<body class="body2">
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow mb-4">
         <div class="container">
             <a class="navbar-brand" href="principal.jsp"><i class="bi bi-piggy-bank-fill"></i> GASTOS</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link active" href="principal.jsp">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link" href="tiendas.jsp">Tiendas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="compras.jsp">Compras</a></li>
+                    <li class="nav-item"><a class="nav-link" href="servletGestion?op=5">Tiendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="compras.jsp">Informes</a></li>
                 </ul>
                 <span class="navbar-text me-3">
                     <i class="bi bi-person-circle"></i> <%= usuario %>
                 </span>
-                <a href="logout.jsp" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
+                <a href="servletGestion?op=0" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
             </div>
         </div>
     </nav>
@@ -81,10 +72,10 @@
                 </p>
             </div>
             <div class="col-md-4">
-                <div class="card card-total shadow-sm bg-white">
+                <div class="card card-total shadow-sm bg-white border-success">
                     <div class="card-body">
-                        <h6 class="text-uppercase text-muted small fw-bold">Gastos de este mes</h6>
-                        <h2 class="mb-0 fw-bold text-success"><%= String.format("%.2f", totalMes) %>€</h2>
+                        <h6 class="text-uppercase text-muted small fw-bold">Total Acumulado</h6>
+                        <h2 class="mb-0 fw-bold text-success"><%= String.format("%.2f", totalAcumulado) %>€</h2>
                     </div>
                 </div>
             </div>
@@ -92,54 +83,85 @@
 
         <div class="card shadow-sm">
             <div class="card-header bg-white py-3">
-                <h5 class="mb-0 fw-bold text-secondary">Compras registradas recientemente</h5>
+                <h5 class="mb-0 fw-bold text-secondary">Historial Completo de Compras</h5>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="ps-4">Fecha</th>
-                                <th>Tienda / Establecimiento</th>
-                                <th class="text-end pe-4">Importe</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if(comprasMes.isEmpty()) { %>
-                                <tr>
-                                    <td colspan="3" class="text-center py-5 text-muted">
-                                        <i class="bi bi-info-circle fs-4"></i><br>
-                                        No se han encontrado compras en el mes de <%= hoy.format(DateTimeFormatter.ofPattern("MMMM", new Locale("es","ES"))) %>.
-                                    </td>
-                                </tr>
-                            <% } else { 
-                                for(Compra c : comprasMes) { %>
-                                <tr>
-                                    <td class="ps-4"><%= c.getFecha() %></td>
-                                    <td><span class="badge badge-tienda px-3 py-2"><%= c.getNombreTienda() %></span></td>
-                                    <td class="text-end pe-4 fw-bold text-dark"><%= String.format("%.2f", c.getImporte()) %>€</td>
-                                </tr>
-                            <% } } %>
-                        </tbody>
-                    </table>
+    <thead class="table-light">
+        <tr>
+            <th class="ps-4">Fecha</th>
+            <th>Tienda / Establecimiento</th>
+            <th class="text-end">Importe</th>
+            <th class="text-center pe-4">Acciones</th> <%-- Nueva columna --%>
+        </tr>
+    </thead>
+    <tbody>
+        <% if(listaCompras.isEmpty()) { %>
+            <tr>
+                <td colspan="4" class="text-center py-5 text-muted">
+                    <i class="bi bi-info-circle fs-4"></i><br>
+                    No hay ninguna compra registrada.
+                </td>
+            </tr>
+        <% } else { 
+            for(Compra c : listaCompras) { %>
+            <tr>
+                <td class="ps-4"><%= c.getFecha() %></td>
+                <td><span class="badge badge-tienda px-3 py-2 text-dark"><%= c.getNombreTienda() %></span></td>
+                <td class="text-end fw-bold text-dark"><%= String.format("%.2f", c.getImporte()) %>€</td>
+                <td class="text-center pe-4">
+                    <%-- Botón Editar: Envía al controlador con operación 'modificar' --%>
+                    <a href="servletGestion?op=2&id=<%= c.getIdCompra() %>" class="btn btn-outline-primary btn-sm me-1" title="Editar">
+                        <i class="bi bi-pencil-square"></i>
+                    </a>
+                    <%-- Botón Eliminar: Usamos una función JavaScript para confirmar --%>
+                    <button onclick="confirmarEliminar(<%= c.getIdCompra() %>)" class="btn btn-outline-danger btn-sm" title="Eliminar">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        <% } } %>
+    </tbody>
+</table>
                 </div>
             </div>
         </div>
         
         <div class="mt-4 text-end">
-            <a href="compras.jsp" class="btn btn-primary shadow-sm">
-                <i class="bi bi-plus-lg"></i> Añadir Gasto
+            <a href="servletGestion?op=1" class="btn btn-primary shadow-sm">
+                <i class="bi bi-plus-lg"></i> Añadir Compra
             </a>
         </div>
     </div>
+    <form id="formBorrar" action="servletGestion" method="post" style="display:none;">
+    <input type="hidden" name="op" value="3">
+    <input type="hidden" name="id" id="idBorrar">
+</form>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./js/alertify.min.js"></script>
     <script>
         alertify.set('notifier','position', 'bottom-right');
-        <% if(usuario != null) { %>
-            alertify.success('Bienvenido de nuevo, <%= usuario %>');
+        <% if(request.getParameter("login") != null) { // Solo si acaba de entrar %>
+            alertify.success('Bienvenido de nuevo, <%= idUsuario %>');
         <% } %>
+        <% if("deleted".equals(request.getParameter("res"))) { %>
+        alertify.success('Compra eliminada correctamente');
+    <% } %>
+        
+        function confirmarEliminar(id) {
+            alertify.confirm("Eliminar Gasto", "¿Seguro que quieres borrar esta compra?",
+                function() {
+                    // Asignamos el ID al input oculto y enviamos el formulario por POST
+                    document.getElementById('idBorrar').value = id;
+                    document.getElementById('formBorrar').submit();
+                },
+                function() {
+                    alertify.error('Operación cancelada');
+                }
+            ).set('labels', {ok:'Eliminar', cancel:'Volver'});
+        }
     </script>
 </body>
 </html>

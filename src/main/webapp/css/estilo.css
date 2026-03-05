@@ -1,6 +1,5 @@
-body {
+.body1 {
 	background-image: url("../img/fondoLogin.png");
-	
 	background-attachment: fixed;
 	background-size: cover;
 	background-position: center;
@@ -12,4 +11,23 @@ body {
 	width: 100%;
 	border: none; /* Quitamos el borde por defecto para usar solo sombra */
 	background-color: #c8e3fe;
+}
+
+.body2 {
+	background-color: #f8f9fa;
+}
+
+.navbar-brand {
+	font-weight: bold;
+	color: #198754 !important;
+}
+
+.card-total {
+	border-left: 5px solid #198754;
+}
+
+.badge-tienda {
+	background-color: #e9ecef;
+	color: #495057;
+	border: 1px solid #dee2e6;
 }
