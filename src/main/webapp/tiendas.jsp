@@ -1,7 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="java.util.*" %>
+<%@ page import="java.util.*, es.studium.gestion.Tienda" %>
 <%
-    List<String[]> tiendas = (List<String[]>) request.getAttribute("listaTiendas");
+    List<Tienda> tiendas = (List<Tienda>) request.getAttribute("listaTiendas");
     String usuario = (String) session.getAttribute("usuario");
 %>
 <!DOCTYPE html>
@@ -22,7 +22,7 @@
             <div class="collapse navbar-collapse">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item"><a class="nav-link" href="principal.jsp">Inicio</a></li>
-                    <li class="nav-item"><a class="nav-link active" href="servletGestion?op=5">Tiendas</a></li>
+                    <li class="nav-item"><a class="nav-link" href="servletGestion?op=6">Informes</a></li>
                 </ul>
                 <span class="navbar-text me-3"><i class="bi bi-person-circle"></i> <%= usuario %></span>
                 <a href="servletGestion?op=0" class="btn btn-outline-danger btn-sm">Cerrar Sesión</a>
@@ -55,31 +55,86 @@
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4">Nombre de la Tienda</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <% for(String[] t : tiendas) { %>
+                        <% if(tiendas != null) { 
+                            for(Tienda t : tiendas) { %>
                         <tr>
-                            <td class="ps-4"><%= t[1] %></td>
+                            <td class="ps-4 align-middle"><%= t.getNombreTienda() %></td>
+                            <td class="text-center">
+                                <button class="btn btn-outline-primary btn-sm me-1" 
+                                        onclick="abrirModalEditar(<%= t.getIdTienda() %>, '<%= t.getNombreTienda() %>')">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                                <button class="btn btn-outline-danger btn-sm" 
+                                        onclick="confirmarBorrarTienda(<%= t.getIdTienda() %>)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
                         </tr>
-                        <% } %>
+                        <% } } %>
                     </tbody>
                 </table>
             </div>
         </div>
-        
         <div class="mt-4">
-            <a href="servletGestion?op=1" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> ir a compras
-            </a>
+            <a href="principal.jsp" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Volver</a>
         </div>
     </div>
 
+    <div class="modal fade" id="modalEditarTienda" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form action="servletGestion" method="post">
+                    <input type="hidden" name="op" value="51">
+                    <input type="hidden" name="idTiendaEdit" id="idTiendaEdit">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Editar Establecimiento</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label">Nombre de la tienda:</label>
+                        <input type="text" name="nombreTiendaEdit" id="nombreTiendaEdit" class="form-control" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <form id="formBorrarTienda" action="servletGestion" method="post" style="display:none;">
+        <input type="hidden" name="op" value="52">
+        <input type="hidden" name="id" id="idBorrarTienda">
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./js/alertify.min.js"></script>
     <script>
-        <% if("tiendaOK".equals(request.getParameter("res"))) { %>
-            alertify.success('Tienda añadida correctamente');
-        <% } %>
+        function abrirModalEditar(id, nombre) {
+            document.getElementById('idTiendaEdit').value = id;
+            document.getElementById('nombreTiendaEdit').value = nombre;
+            var myModal = new bootstrap.Modal(document.getElementById('modalEditarTienda'));
+            myModal.show();
+        }
+
+        function confirmarBorrarTienda(id) {
+            alertify.confirm("Eliminar Tienda", "¿Seguro? Si tiene compras asociadas no se podrá borrar.",
+                function() {
+                    document.getElementById('idBorrarTienda').value = id;
+                    document.getElementById('formBorrarTienda').submit();
+                }, null).set('labels', {ok:'Eliminar', cancel:'Cancelar'});
+        }
+
+        <% String res = request.getParameter("res"); 
+           if("tiendaOK".equals(res)) { %> alertify.success('Tienda añadida correctamente'); <% } 
+           if("tiendaEditOK".equals(res)) { %> alertify.success('Tienda actualizada'); <% } 
+           if("errorBorrado".equals(res)) { %> alertify.error("No se puede eliminar: Esta tienda está en uso."); <% } 
+           if("tiendaBorradaOK".equals(res)) { %> alertify.success("Tienda eliminada."); <% } %>
     </script>
 </body>
 </html>

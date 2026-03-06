@@ -17,7 +17,7 @@ String usuario=(String) sesion.getAttribute("usuario");
     double totalAcumulado = modelo.calcularTotalHistorico(idUsuario);
 
     // 3. Lógica para el rango de fechas (Mantenemos esto porque es útil)
-    String[] rango = modelo.obtenerRangoFechas();
+    String[] rango = modelo.obtenerRangoFechas(idUsuario);
     String textoRango = "Sin registros";
     
     if (rango[0] != null && rango[1] != null) {
@@ -39,10 +39,7 @@ String usuario=(String) sesion.getAttribute("usuario");
     <link rel="stylesheet" href="./css/alertify.min.css" />
     <link rel="stylesheet" href="./css/themes/default.min.css" />
     <link rel="stylesheet" href="./css/estilo.css" />
-    <style>
-        /* Pequeño ajuste por si no tienes badge-tienda en estilo.css */
-        .badge-tienda { background-color: #f0f2f5; color: #333; border: 1px solid #ddd; }
-    </style>
+   
 </head>
 <body class="body2">
 
@@ -51,9 +48,9 @@ String usuario=(String) sesion.getAttribute("usuario");
             <a class="navbar-brand" href="principal.jsp"><i class="bi bi-piggy-bank-fill"></i> GASTOS</a>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link active" href="principal.jsp">Inicio</a></li>
+                 
                     <li class="nav-item"><a class="nav-link" href="servletGestion?op=5">Tiendas</a></li>
-                    <li class="nav-item"><a class="nav-link" href="compras.jsp">Informes</a></li>
+                    <li class="nav-item"><a class="nav-link" href="servletGestion?op=6">Informes</a></li>
                 </ul>
                 <span class="navbar-text me-3">
                     <i class="bi bi-person-circle"></i> <%= usuario %>

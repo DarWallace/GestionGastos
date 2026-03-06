@@ -16,7 +16,7 @@
 .body2 {
 	background-color: #f8f9fa;
 }
-
+.body .badge-tienda { background-color: #f0f2f5; color: #333; border: 1px solid #ddd; }
 .navbar-brand {
 	font-weight: bold;
 	color: #198754 !important;

@@ -71,7 +71,7 @@ public class servletGestion extends HttpServlet {
 	    }
 	 // Ir al formulario de Nueva Compra
 	    else if (op.equals("1")) {
-	        List<String[]> tiendas = modelo.obtenerNombresTiendas();
+	        List<Tienda> tiendas = modelo.obtenerNombresTiendas();
 	        request.setAttribute("listaTiendas", tiendas);
 	        request.getRequestDispatcher("compras.jsp").forward(request, response);
 	    }
@@ -89,9 +89,38 @@ public class servletGestion extends HttpServlet {
 	        modelo.insertarCompra(fecha, importe, idTienda, idUsuario);
 	        response.sendRedirect("principal.jsp?res=inserted");
 	    }
+	 // Operación 2: IR A EDITAR COMPRA
+	    else if (op.equals("2")) {
+	        int idCompra = Integer.parseInt(request.getParameter("id"));
+	        
+	        // 1. Obtenemos los datos de la compra específica
+	        Compra compraAEditar = modelo.obtenerCompraPorId(idCompra);
+	        // 2. Necesitamos las tiendas para el desplegable
+	        List<Tienda> tiendas = modelo.obtenerNombresTiendas();
+	        
+	        request.setAttribute("compra", compraAEditar);
+	        request.setAttribute("listaTiendas", tiendas);
+	        // Reutilizamos compras.jsp
+	        request.getRequestDispatcher("compras.jsp").forward(request, response);
+	    }
+	    else if (op.equals("20")) {
+	        int id = Integer.parseInt(request.getParameter("idCompra"));
+	        String fecha = request.getParameter("fecha");
+	        double importe = Double.parseDouble(request.getParameter("importe"));
+	        int idTienda = Integer.parseInt(request.getParameter("idTienda"));
+	        String origen = request.getParameter("origen");
+
+	        modelo.actualizarCompra(id, fecha, importe, idTienda);
+	        
+	        if (origen != null && origen.contains("op=6")) {
+	            response.sendRedirect("servletGestion?op=6&res=editOK");
+	        } else {
+	            response.sendRedirect("principal.jsp?res=editOK");
+	        }
+	    }
 	 // Operación 5: IR A GESTIÓN DE TIENDAS
 	    else if (op.equals("5")) {
-	        List<String[]> tiendas = modelo.obtenerNombresTiendas();
+	        List<Tienda> tiendas = modelo.obtenerNombresTiendas();
 	        request.setAttribute("listaTiendas", tiendas);
 	        request.getRequestDispatcher("tiendas.jsp").forward(request, response);
 	    }
@@ -102,6 +131,50 @@ public class servletGestion extends HttpServlet {
 	        modelo.insertarTienda(nombreTienda);
 	        // Redirigimos de nuevo a la gestión de tiendas con aviso
 	        response.sendRedirect("servletGestion?op=5&res=tiendaOK");
+	    }
+	    //  ACTUALIZAR TIENDA
+	    else if (op.equals("51")) {
+	        int id = Integer.parseInt(request.getParameter("idTiendaEdit"));
+	        String nombre = request.getParameter("nombreTiendaEdit");
+	        modelo.actualizarTienda(id, nombre);
+	        response.sendRedirect("servletGestion?op=5&res=tiendaEditOK");
+	    }
+
+	    // BORRAR TIENDA
+	    else if (op.equals("52")) {
+	        int id = Integer.parseInt(request.getParameter("id"));
+	        boolean exito = modelo.eliminarTienda(id);
+	        if(exito) {
+	            response.sendRedirect("servletGestion?op=5&res=tiendaBorradaOK");
+	        } else {
+	            response.sendRedirect("servletGestion?op=5&res=errorBorrado");
+	        }
+	    }
+	    else if (op.equals("6")) {
+	        int idUsuario = (int) request.getSession().getAttribute("idUsuario");
+	        String mesSeleccionado = request.getParameter("mesFiltro");
+	        
+	     // Obtenemos la lista dinámica de meses para el desplegable
+	        List<String[]> listaMeses = modelo.obtenerMesesConCompras(idUsuario);
+	        
+	        // Si es la primera vez que entra, seleccionamos el más reciente
+	        if (mesSeleccionado == null && !listaMeses.isEmpty()) {
+	            mesSeleccionado = listaMeses.get(0)[0];
+	        }
+	        
+	     // Obtenemos las compras y el total
+	        List<Compra> comprasMes = modelo.obtenerComprasPorMes(idUsuario, mesSeleccionado);
+	        
+	        // Calculamos el total de ese mes específico
+	        double totalMes = 0;
+	        for(Compra c : comprasMes) { totalMes += c.getImporte(); }
+	        
+	     // Mandamos todo al JSP, incluyendo la nueva lista de meses
+	        request.setAttribute("listaMeses", listaMeses); 
+	        request.setAttribute("comprasMes", comprasMes);
+	        request.setAttribute("totalMes", totalMes);
+	        request.setAttribute("mesActual", mesSeleccionado);
+	        request.getRequestDispatcher("informes.jsp").forward(request, response);
 	    }
 
 }}
